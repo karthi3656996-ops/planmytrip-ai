@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Trip Planner — PlanMyTrip AI</title>
+  <meta name="description" content="Generate your personalized AI travel itinerary instantly. Enter your destination, budget, and travel style."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --orange:#FF6B35;--orange-dark:#e85a25;--gold:#FFD166;
+      --dark:#1A1A1A;--gray:#6b7280;--white:#fff;
+      --radius-sm:12px;--radius-md:20px;--radius-lg:32px;
+      --shadow-md:0 8px 32px rgba(0,0,0,0.12);
+      --shadow-lg:0 20px 60px rgba(0,0,0,0.18);
+      --transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Poppins',sans-serif;background:#f9f8f6;color:#1A1A1A;min-height:100vh}
+    img{display:block;width:100%;height:100%;object-fit:cover}
+    a{text-decoration:none;color:inherit}
+    button{cursor:pointer;border:none;background:none;font-family:inherit}
+
+    /* ── TOP BAR ── */
+    .topbar{
+      background:#1A1A1A;padding:14px 24px;
+      display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:100;box-shadow:0 4px 24px rgba(0,0,0,0.3);
+    }
+    .topbar-logo{display:flex;align-items:center;gap:10px;color:#fff;font-size:1.2rem;font-weight:700}
+    .topbar-logo-icon{
+      width:34px;height:34px;border-radius:9px;
+      background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem
+    }
+    .topbar-back{
+      display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);
+      font-size:0.85rem;font-weight:500;transition:var(--transition);
+    }
+    .topbar-back:hover{color:#fff}
+    .topbar-steps{display:flex;align-items:center;gap:8px}
+    .step-dot{
+      width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);
+      display:flex;align-items:center;justify-content:center;font-size:0.7rem;
+      font-weight:700;color:rgba(255,255,255,0.4);transition:var(--transition);
+    }
+    .step-dot.done{background:var(--orange);border-color:var(--orange);color:#fff}
+    .step-dot.active{border-color:var(--orange);color:var(--orange)}
+    .step-line{width:32px;height:2px;background:rgba(255,255,255,0.1);border-radius:2px}
+    .step-line.done{background:var(--orange)}
+
+    /* ── MAIN LAYOUT ── */
+    .planner-main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+
+    /* ── STEP PANELS ── */
+    .step-panel{display:none}
+    .step-panel.active{display:block;animation:fadeUp 0.45s ease}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── STEP 1: FORM ── */
+    .form-hero{text-align:center;margin-bottom:40px}
+    .form-tag{
+      display:inline-flex;align-items:center;gap:8px;
+      background:rgba(255,107,53,0.1);color:var(--orange);
+      border:1px solid rgba(255,107,53,0.2);
+      padding:6px 16px;border-radius:50px;font-size:0.8rem;font-weight:600;
+      margin-bottom:16px;
+    }
+    .form-hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;line-height:1.15;margin-bottom:12px}
+    .form-hero h1 span{
+      background:linear-gradient(135deg,var(--orange),var(--gold));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .form-hero p{font-size:1rem;color:var(--gray);max-width:520px;margin:0 auto;line-height:1.7}
+
+    .form-card{
+      background:#fff;border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-lg);padding:40px;
+      border:1px solid rgba(255,107,53,0.08);
+    }
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+    .form-group{display:flex;flex-direction:column;gap:8px}
+    .form-group.full{grid-column:span 2}
+    .form-group label{
+      font-size:0.85rem;font-weight:700;color:#1A1A1A;
+      display:flex;align-items:center;gap:8px;
+    }
+    .form-group label i{color:var(--orange);width:16px}
+    .form-group input,.form-group select,.form-group textarea{
+      padding:14px 16px;border:1.5px solid #e5e7eb;border-radius:var(--radius-sm);
+      font-size:0.95rem;font-family:inherit;color:#1A1A1A;
+      transition:var(--transition);background:#fff;
+    }
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+      outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,107,53,0.1);
+    }
+    .form-group textarea{resize:none;height:90px}
+
+    /* Travel Style Cards */
+    .style-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .style-card{
+      padding:16px 10px;border-radius:var(--radius-sm);
+      border:2px solid #e5e7eb;text-align:center;cursor:pointer;
+      transition:var(--transition);
+    }
+    .style-card:hover,.style-card.selected{
+      border-color:var(--orange);background:rgba(255,107,53,0.05);
+    }
+    .style-icon{font-size:1.8rem;margin-bottom:6px}
+    .style-card h4{font-size:0.85rem;font-weight:700;color:#1A1A1A;margin-bottom:2px}
+    .style-card span{font-size:0.72rem;color:var(--gray)}
+    .style-card.selected .style-card-inner{color:var(--orange)}
+
+    /* Mood selector */
+    .mood-row{display:flex;flex-wrap:wrap;gap:10px}
+    .mood-tag{
+      padding:8px 18px;border-radius:50px;border:1.5px solid #e5e7eb;
+      font-size:0.82rem;font-weight:600;color:var(--gray);
+      cursor:pointer;transition:var(--transition);
+    }
+    .mood-tag:hover,.mood-tag.selected{
+      border-color:var(--orange);background:rgba(255,107,53,0.08);color:var(--orange);
+    }
+
+    .form-divider{height:1px;background:#f0f0f0;margin:24px 0}
+    .form-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+    .form-note{font-size:0.8rem;color:var(--gray);display:flex;align-items:center;gap:6px}
+    .form-note i{color:var(--orange)}
+
+    .btn-generate{
+      display:inline-flex;align-items:center;gap:10px;
+      background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+      color:#fff;padding:16px 36px;border-radius:50px;
+      font-weight:700;font-size:1rem;font-family:inherit;
+      box-shadow:0 4px 24px rgba(255,107,53,0.45);
+      transition:var(--transition);
+    }
+    .btn-generate:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,107,53,0.55)}
+    .btn-generate:disabled{opacity:0.7;cursor:not-allowed;transform:none}
+
+    /* ── STEP 2: GENERATING ── */
+    .loading-screen{
+      text-align:center;padding:80px 24px;
+      max-width:600px;margin:0 auto;
+    }
+    .loading-plane{
+      width:80px;height:80px;border-radius:50%;
+      background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+      display:flex;align-items:center;justify-content:center;
+      font-size:2rem;color:#fff;margin:0 auto 28px;
+      animation:planeSpin 2s ease-in-out infinite;
+    }
+    @keyframes planeSpin{
+      0%{transform:rotate(-10deg) scale(1)}
+      50%{transform:rotate(10deg) scale(1.08)}
+      100%{transform:rotate(-10deg) scale(1)}
+    }
+    .loading-screen h2{font-size:1.8rem;font-weight:800;margin-bottom:12px}
+    .loading-screen h2 span{
+      background:linear-gradient(135deg,var(--orange),var(--gold));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+    }
+    .loading-screen p{color:var(--gray);font-size:0.95rem;line-height:1.7;margin-bottom:32px}
+    .loading-steps{display:flex;flex-direction:column;gap:12px;text-align:left;max-width:380px;margin:0 auto 32px}
+    .loading-step{
+      display:flex;align-items:center;gap:12px;
+      padding:12px 16px;border-radius:12px;
+      background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+      font-size:0.875rem;font-weight:500;color:var(--gray);
+      transition:var(--transition);
+    }
+    .loading-step i{width:20px;color:var(--gray);font-size:0.85rem}
+    .loading-step.done{color:#1A1A1A}
+    .loading-step.done i{color:#22c55e}
+    .loading-step.active{color:var(--orange);background:rgba(255,107,53,0.06)}
+    .loading-step.active i{color:var(--orange)}
+    .loading-bar-wrap{width:100%;background:#f0f0f0;border-radius:50px;height:6px;overflow:hidden;margin-bottom:12px}
+    .loading-bar{height:100%;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:50px;width:0%;transition:width 0.5s ease}
+    .loading-pct{font-size:0.85rem;color:var(--orange);font-weight:700}
+
+    /* ── STEP 3: ITINERARY ── */
+    .itinerary-header{
+      background:linear-gradient(135deg,#1A1A1A,#2a2a2a);
+      border-radius:var(--radius-lg);padding:32px;margin-bottom:28px;
+      display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px;
+    }
+    .itin-title{color:#fff;font-size:1.8rem;font-weight:900;margin-bottom:8px}
+    .itin-title i{color:var(--orange)}
+    .itin-tags{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+    .itin-tag{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);
+      padding:5px 14px;border-radius:50px;font-size:0.8rem;font-weight:500;
+    }
+    .itin-tag i{color:var(--gold);font-size:0.7rem}
+    .itin-score{
+      background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.3);
+      border-radius:16px;padding:16px 20px;text-align:center;min-width:120px;
+    }
+    .score-big{font-size:2.2rem;font-weight:900;color:var(--orange);line-height:1}
+    .score-sub{font-size:0.75rem;color:rgba(255,255,255,0.6);font-weight:600;margin-top:4px}
+    .itin-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn-itin{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 20px;border-radius:50px;font-size:0.85rem;font-weight:600;
+      font-family:inherit;transition:var(--transition);
+    }
+    .btn-itin.primary{
+      background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+      color:#fff;box-shadow:0 4px 16px rgba(255,107,53,0.35);
+    }
+    .btn-itin.primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,107,53,0.5)}
+    .btn-itin.outline{border:2px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8)}
+    .btn-itin.outline:hover{border-color:var(--orange);color:var(--orange)}
+
+    /* Budget Summary */
+    .budget-summary{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;
+    }
+    .budget-card{
+      background:#fff;border-radius:var(--radius-md);padding:20px;
+      box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #f0f0f0;
+      text-align:center;transition:var(--transition);
+    }
+    .budget-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+    .budget-icon{font-size:1.4rem;margin-bottom:8px}
+    .budget-amount{font-size:1.3rem;font-weight:900;color:var(--orange)}
+    .budget-label{font-size:0.75rem;color:var(--gray);font-weight:500;margin-top:2px}
+
+    /* Day Tabs */
+    .day-nav{
+      display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;
+      padding-bottom:4px;scrollbar-width:none;
+    }
+    .day-nav::-webkit-scrollbar{display:none}
+    .day-btn{
+      padding:10px 20px;border-radius:50px;font-size:0.85rem;font-weight:700;
+      border:2px solid #e5e7eb;color:var(--gray);font-family:inherit;
+      white-space:nowrap;transition:var(--transition);flex-shrink:0;
+    }
+    .day-btn.active,.day-btn:hover{
+      background:var(--orange);border-color:var(--orange);color:#fff;
+    }
+
+    .day-panel{display:none}
+    .day-panel.active{display:block;animation:fadeUp 0.35s ease}
+    .day-card{
+      background:#fff;border-radius:var(--radius-md);
+      box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:20px;
+    }
+    .day-card-header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 24px;border-bottom:1px solid #f5f5f5;flex-wrap:wrap;gap:10px;
+    }
+    .day-badge{
+      background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+      color:#fff;padding:4px 14px;border-radius:50px;font-size:0.8rem;font-weight:700;
+    }
+    .day-card-header h3{font-size:1rem;font-weight:800;color:#1A1A1A;flex:1;margin:0 12px}
+    .day-cost{
+      background:rgba(255,209,102,0.15);color:#b45309;
+      padding:4px 12px;border-radius:50px;font-size:0.8rem;font-weight:700;
+    }
+    .day-timeline{padding:20px 24px;display:flex;flex-direction:column;gap:0}
+    .timeline-item{
+      display:flex;gap:16px;position:relative;padding-bottom:20px;
+    }
+    .timeline-item:last-child{padding-bottom:0}
+    .timeline-left{
+      display:flex;flex-direction:column;align-items:center;width:44px;flex-shrink:0;
+    }
+    .timeline-icon{
+      width:44px;height:44px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;
+      border:2px solid;
+    }
+    .timeline-icon.morning{background:rgba(255,209,102,0.15);border-color:rgba(255,209,102,0.4);color:#b45309}
+    .timeline-icon.afternoon{background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.3);color:var(--orange)}
+    .timeline-icon.evening{background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.25);color:#6366f1}
+    .timeline-line{width:2px;flex:1;background:linear-gradient(to bottom,#e5e7eb,transparent);margin-top:6px}
+    .timeline-item:last-child .timeline-line{display:none}
+    .timeline-content{padding-bottom:4px;flex:1}
+    .timeline-time{font-size:0.72rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+    .timeline-content h4{font-size:0.95rem;font-weight:700;color:#1A1A1A;margin-bottom:4px}
+    .timeline-content p{font-size:0.85rem;color:var(--gray);line-height:1.65}
+    .timeline-meta{
+      display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;
+    }
+    .meta-chip{
+      display:inline-flex;align-items:center;gap:5px;
+      background:#f5f5f5;color:var(--gray);
+      padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:600;
+    }
+    .meta-chip i{font-size:0.65rem;color:var(--orange)}
+
+    /* Expense card */
+    .expense-row{
+      display:flex;flex-wrap:wrap;gap:12px;
+      padding:16px 24px;background:#fafafa;border-top:1px solid #f0f0f0;
+    }
+    .expense-item{
+      display:flex;align-items:center;gap:6px;
+      font-size:0.8rem;font-weight:600;color:#1A1A1A;
+    }
+    .expense-item i{color:var(--orange);font-size:0.75rem}
+
+    /* Tips */
+    .tips-card{
+      background:linear-gradient(135deg,rgba(255,107,53,0.06),rgba(255,209,102,0.06));
+      border:1.5px solid rgba(255,107,53,0.15);
+      border-radius:var(--radius-md);padding:24px;margin-bottom:20px;
+    }
+    .tips-card h3{font-size:1rem;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .tips-card h3 i{color:var(--orange)}
+    .tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .tip-item{
+      display:flex;align-items:flex-start;gap:10px;
+      background:#fff;padding:12px;border-radius:10px;
+      font-size:0.82rem;color:var(--gray);line-height:1.5;
+      box-shadow:0 1px 4px rgba(0,0,0,0.04);
+    }
+    .tip-item i{color:var(--orange);font-size:0.9rem;margin-top:1px;flex-shrink:0}
+
+    /* Replay button */
+    .replay-bar{
+      text-align:center;padding:32px 0 0;
+    }
+    .btn-replay{
+      display:inline-flex;align-items:center;gap:8px;
+      border:2px solid var(--orange);color:var(--orange);
+      padding:12px 28px;border-radius:50px;font-weight:600;
+      font-size:0.9rem;font-family:inherit;transition:var(--transition);
+    }
+    .btn-replay:hover{background:var(--orange);color:#fff;transform:translateY(-2px)}
+
+    /* Toast */
+    .toast{
+      position:fixed;bottom:32px;right:32px;z-index:9999;
+      background:#1A1A1A;color:#fff;padding:14px 22px;
+      border-radius:50px;font-size:0.875rem;font-weight:500;
+      box-shadow:var(--shadow-md);opacity:0;visibility:hidden;
+      transform:translateY(20px);transition:all 0.35s ease;
+      border-left:4px solid var(--orange);
+    }
+    .toast.show{opacity:1;visibility:visible;transform:translateY(0)}
+
+    /* Responsive */
+    @media(max-width:768px){
+      .form-grid{grid-template-columns:1fr}
+      .form-group.full{grid-column:auto}
+      .style-grid{grid-template-columns:repeat(2,1fr)}
+      .budget-summary{grid-template-columns:repeat(2,1fr)}
+      .topbar-steps{display:none}
+      .tips-grid{grid-template-columns:1fr}
+      .itinerary-header{flex-direction:column}
+    }
+    @media(max-width:480px){
+      .planner-main{padding:24px 16px 60px}
+      .form-card{padding:24px}
+      .budget-summary{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<nav class="topbar">
+  <a href="index.html" class="topbar-back">
+    <i class="fas fa-arrow-left"></i> Back to Home
+  </a>
+  <div class="topbar-logo">
+    <div class="topbar-logo-icon"><i class="fas fa-paper-plane"></i></div>
+    PlanMyTrip <span style="color:var(--orange)">AI</span>
+  </div>
+  <div class="topbar-steps">
+    <div class="step-dot active" id="dot1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" id="dot2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" id="dot3">✓</div>
+  </div>
+</nav>
+
+<main class="planner-main">
+
+  <!-- ── STEP 1: FORM ── -->
+  <div class="step-panel active" id="step1">
+    <div class="form-hero">
+      <div class="form-tag"><i class="fas fa-robot"></i> AI-Powered Planner</div>
+      <h1>Plan Your Perfect Trip <span>in Seconds</span></h1>
+      <p>Tell us about your dream trip and our AI will build a detailed day-by-day itinerary, manage your budget, and suggest the best experiences.</p>
+    </div>
+
+    <div class="form-card">
+      <form id="plannerForm">
+
+        <!-- Destination + Dates -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label><i class="fas fa-map-marker-alt"></i> Destination *</label>
+            <input type="text" id="p-dest" placeholder="e.g. Bali, Paris, Kerala, Dubai" required/>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-wallet"></i> Total Budget (₹) *</label>
+            <input type="number" id="p-budget" placeholder="e.g. 50000" min="1000" required/>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-calendar-alt"></i> Number of Days *</label>
+            <input type="number" id="p-days" placeholder="e.g. 5" min="1" max="30" required/>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-users"></i> Number of Travelers</label>
+            <select id="p-travelers">
+              <option value="1">1 Traveler (Solo)</option>
+              <option value="2" selected>2 Travelers</option>
+              <option value="3">3 Travelers</option>
+              <option value="4">4 Travelers (Family/Group)</option>
+              <option value="5">5+ Travelers</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Travel Style -->
+        <div class="form-group" style="margin-bottom:20px">
+          <label><i class="fas fa-heart"></i> Travel Style *</label>
+          <div class="style-grid" id="styleGrid">
+            <div class="style-card selected" data-style="solo" onclick="selectStyle(this)">
+              <div class="style-icon">🧍</div>
+              <h4>Solo</h4><span>My pace, my rules</span>
+            </div>
+            <div class="style-card" data-style="couple" onclick="selectStyle(this)">
+              <div class="style-icon">💑</div>
+              <h4>Couple</h4><span>Romantic getaway</span>
+            </div>
+            <div class="style-card" data-style="family" onclick="selectStyle(this)">
+              <div class="style-icon">👨‍👩‍👧</div>
+              <h4>Family</h4><span>Fun for everyone</span>
+            </div>
+            <div class="style-card" data-style="friends" onclick="selectStyle(this)">
+              <div class="style-icon">🧑‍🤝‍🧑</div>
+              <h4>Friends</h4><span>Group adventure</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trip Mood -->
+        <div class="form-group" style="margin-bottom:20px">
+          <label><i class="fas fa-smile"></i> Trip Mood</label>
+          <div class="mood-row" id="moodRow">
+            <button type="button" class="mood-tag selected" data-mood="adventure" onclick="selectMood(this)">⚡ Adventure</button>
+            <button type="button" class="mood-tag" data-mood="relax" onclick="selectMood(this)">😌 Relax</button>
+            <button type="button" class="mood-tag" data-mood="culture" onclick="selectMood(this)">🏛️ Culture</button>
+            <button type="button" class="mood-tag" data-mood="food" onclick="selectMood(this)">🍜 Food & Drink</button>
+            <button type="button" class="mood-tag" data-mood="nature" onclick="selectMood(this)">🌿 Nature</button>
+            <button type="button" class="mood-tag" data-mood="luxury" onclick="selectMood(this)">👑 Luxury</button>
+            <button type="button" class="mood-tag" data-mood="spiritual" onclick="selectMood(this)">🧘 Spiritual</button>
+            <button type="button" class="mood-tag" data-mood="shopping" onclick="selectMood(this)">🛍️ Shopping</button>
+          </div>
+        </div>
+
+        <!-- Special Requests -->
+        <div class="form-group" style="margin-bottom:24px">
+          <label><i class="fas fa-comment-alt"></i> Special Requests (optional)</label>
+          <textarea id="p-notes" placeholder="e.g. Vegetarian food, wheelchair accessible, beach hotel preferred, avoid crowded places..."></textarea>
+        </div>
+
+        <div class="form-divider"></div>
+        <div class="form-footer">
+          <p class="form-note"><i class="fas fa-lock"></i> Your data is private & secure. Never shared.</p>
+          <button type="submit" class="btn-generate" id="generateBtn">
+            <i class="fas fa-magic"></i> Generate My Itinerary
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: LOADING ── -->
+  <div class="step-panel" id="step2">
+    <div class="loading-screen">
+      <div class="loading-plane"><i class="fas fa-paper-plane"></i></div>
+      <h2>Creating Your <span>Perfect Trip</span></h2>
+      <p>Our AI is analyzing thousands of travel experiences to build your personalized itinerary. This takes just a moment!</p>
+      <div class="loading-steps">
+        <div class="loading-step active" id="ls1"><i class="fas fa-spinner fa-spin"></i> Analyzing your destination & preferences</div>
+        <div class="loading-step" id="ls2"><i class="fas fa-circle"></i> Building day-by-day schedule</div>
+        <div class="loading-step" id="ls3"><i class="fas fa-circle"></i> Calculating budget breakdown</div>
+        <div class="loading-step" id="ls4"><i class="fas fa-circle"></i> Finding best hotels & restaurants</div>
+        <div class="loading-step" id="ls5"><i class="fas fa-circle"></i> Adding local insider tips</div>
+      </div>
+      <div class="loading-bar-wrap"><div class="loading-bar" id="loadingBar"></div></div>
+      <div class="loading-pct" id="loadingPct">0%</div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: ITINERARY ── -->
+  <div class="step-panel" id="step3">
+
+    <!-- Header -->
+    <div class="itinerary-header">
+      <div>
+        <div class="itin-tags" id="itinTags"></div>
+        <h2 class="itin-title" id="itinTitle"></h2>
+        <div class="itin-actions">
+          <button class="btn-itin primary" onclick="printItinerary()"><i class="fas fa-download"></i> Download PDF</button>
+          <button class="btn-itin outline" onclick="shareItinerary()"><i class="fas fa-share-alt"></i> Share</button>
+          <button class="btn-itin outline" onclick="copyItinerary()"><i class="fas fa-copy"></i> Copy Link</button>
+        </div>
+      </div>
+      <div class="itin-score">
+        <div class="score-big" id="aiScore">9.2</div>
+        <div class="score-sub">AI MATCH SCORE</div>
+      </div>
+    </div>
+
+    <!-- Budget Summary -->
+    <div class="budget-summary" id="budgetSummary"></div>
+
+    <!-- Day Navigation -->
+    <div class="day-nav" id="dayNav"></div>
+
+    <!-- Day Panels -->
+    <div id="dayPanels"></div>
+
+    <!-- Tips -->
+    <div class="tips-card" id="tipsCard"></div>
+
+    <!-- Replay -->
+    <div class="replay-bar">
+      <button class="btn-replay" onclick="goBack()"><i class="fas fa-redo"></i> Plan Another Trip</button>
+    </div>
+
+  </div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── DATA ── */
+const tripData = {
+  adventure: {
+    morningActs: ['Sunrise hike to the hilltop viewpoint','White-water rafting on the river','Rock climbing at the famous cliffs','Paragliding over the valley','Zip-lining through the forest canopy'],
+    afternoonActs: ['ATV ride through jungle trails','Snorkeling at the coral reef','Mountain biking trails','Kayaking on the river','Cave exploration & trekking'],
+    eveningActs: ['Bonfire dinner at the campsite','Sunset cocktails at the sky bar','Night market street food tour','Rooftop BBQ with city views','Stargazing at the hilltop'],
+    hotels: ['Adventure Lodge','Mountain Base Camp Hotel','Riverside Resort','Eco-Adventure Stay','Treehouse Retreat'],
+    restaurants: ['The Trail Kitchen','Base Camp Bistro','Jungle Cafe','Summit Diner','River View Grill'],
+  },
+  relax: {
+    morningActs: ['Sunrise yoga on the beach','Leisurely breakfast with ocean views','Spa & wellness morning session','Meditation by the poolside','Gentle beach walk & shell collecting'],
+    afternoonActs: ['Infinity pool lounging','Beachside hammock relaxation','Sunset boat cruise','Traditional massage therapy','Resort pool day with cocktails'],
+    eveningActs: ['Candlelit dinner by the beach','Sunset cruise with wine','Night spa & hot tub','Starlit dinner on the terrace','Cultural performance show'],
+    hotels: ['The Tranquil Resort & Spa','Beachfront Paradise Hotel','Serenity Wellness Retreat','Palm Grove Resort','Sunset Villa Hotel'],
+    restaurants: ['The Driftwood Restaurant','Sea Breeze Dining','Sunset Terrace','The Garden Table','Oceanview Bistro'],
+  },
+  culture: {
+    morningActs: ['Guided heritage walk through the old city','Temple & monument visit at dawn','Local market exploration','Museum of history & arts tour','Traditional craft workshop'],
+    afternoonActs: ['Archaeological site exploration','Cultural village tour','Traditional cooking class','Art gallery & cultural center','Ancient fort & palace visit'],
+    eveningActs: ['Traditional dance performance show','Heritage walk with a local guide','Cultural dinner with folk music','Night visit to illuminated monuments','Local theater performance'],
+    hotels: ['Heritage Haveli Hotel','Colonial Mansion Stay','Boutique Cultural Inn','Old Town Palace Hotel','Artisan\'s Quarter Lodge'],
+    restaurants: ['The Royal Kitchen','Heritage Dining Hall','Spice Route Restaurant','Traditional Thali House','The Cultural Table'],
+  },
+  food: {
+    morningActs: ['Street food breakfast tour','Local market & spice shopping','Cooking class with a master chef','Bakery & cafe hopping','Farm-to-table morning experience'],
+    afternoonActs: ['Food street walk & tasting tour','Winery or brewery visit','Regional cuisine cooking workshop','Restaurant hop & food crawl','Local delicacy tasting session'],
+    eveningActs: ['Fine dining at a Michelin-recommended restaurant','Street food night market','Sunset dinner with a view','Chef\'s table experience','Rooftop dining under the stars'],
+    hotels: ['Gastronomy Boutique Hotel','The Culinary Inn','Foodie\'s Paradise Hotel','Gourmet Stay & Suites','The Chef\'s Quarter'],
+    restaurants: ['The Signature Kitchen','Roots & Spice Restaurant','Chef\'s Table Experience','The Local Plate','Grand Tasting House'],
+  },
+  nature: {
+    morningActs: ['Nature walk & bird watching','Waterfall hike & swim','Botanical garden exploration','Sunrise at the national park','Forest meditation & photography'],
+    afternoonActs: ['Jeep safari wildlife spotting','Scenic valley trek','Lake kayaking & picnic','Butterfly garden & eco park','Organic farm tour & harvest'],
+    eveningActs: ['Sunset at the scenic viewpoint','Wildlife night safari','Campfire & stargazing','Night walk in the forest','Riverside bonfire dinner'],
+    hotels: ['Forest Eco Lodge','Wildlife Reserve Stay','Nature Retreat & Spa','The Green Valley Hotel','Treehouse Nature Lodge'],
+    restaurants: ['The Forest Kitchen','Organic Farm Table','Wild Harvest Cafe','Nature\'s Bounty Dining','The Riverside Grill'],
+  },
+  luxury: {
+    morningActs: ['Private helicopter tour of the city','Exclusive spa & wellness morning','Private yacht breakfast cruise','Luxury shopping on the main boulevard','Personal chef breakfast in your suite'],
+    afternoonActs: ['Private island picnic','Exclusive golf at the championship course','VIP access to top attractions','Personal tour of luxury neighborhoods','Private boat charter'],
+    eveningActs: ['Michelin-star restaurant dinner','Exclusive rooftop party & DJ','Private sunset cruise with champagne','VIP nightclub & lounge experience','Chef\'s private dinner at the suite'],
+    hotels: ['The Grand Palace Hotel & Spa','7-Star Luxury Beachfront','Presidential Suite Tower','The Royal Collection Hotel','Ultra-Luxury Eco Resort'],
+    restaurants: ['The Pinnacle Fine Dining','Altitude Restaurant','Gold Leaf Bistro','The Imperial Table','Prestige Gourmet House'],
+  },
+};
+
+const defaultData = tripData.adventure;
+
+/* ── STATE ── */
+let selectedStyle = 'solo';
+let selectedMood  = 'adventure';
+let tripInfo      = {};
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  // Pre-fill from URL params if coming from main site
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('dest'))    document.getElementById('p-dest').value    = params.get('dest');
+  if (params.get('budget'))  document.getElementById('p-budget').value  = params.get('budget');
+  if (params.get('days'))    document.getElementById('p-days').value    = params.get('days');
+  if (params.get('style')) {
+    selectedStyle = params.get('style');
+    document.querySelectorAll('.style-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.style === selectedStyle);
+    });
+  }
+});
+
+/* ── SELECTORS ── */
+function selectStyle(el) {
+  document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedStyle = el.dataset.style;
+}
+function selectMood(el) {
+  document.querySelectorAll('.mood-tag').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMood = el.dataset.mood;
+}
+
+/* ── FORM SUBMIT ── */
+document.getElementById('plannerForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const dest     = document.getElementById('p-dest').value.trim();
+  const budget   = parseInt(document.getElementById('p-budget').value);
+  const days     = Math.min(parseInt(document.getElementById('p-days').value), 7);
+  const travelers= parseInt(document.getElementById('p-travelers').value);
+  const notes    = document.getElementById('p-notes').value.trim();
+
+  if (!dest || !budget || !days) { showToast('⚠️ Please fill in all required fields!'); return; }
+
+  tripInfo = { dest, budget, days, travelers, notes, style: selectedStyle, mood: selectedMood };
+
+  goToStep(2);
+  runLoadingAnimation(dest, budget, days, travelers);
+});
+
+/* ── LOADING ANIMATION ── */
+function runLoadingAnimation(dest, budget, days, travelers) {
+  const steps  = [document.getElementById('ls1'),document.getElementById('ls2'),document.getElementById('ls3'),document.getElementById('ls4'),document.getElementById('ls5')];
+  const icons  = ['fa-check-circle','fa-check-circle','fa-check-circle','fa-check-circle','fa-check-circle'];
+  const bar    = document.getElementById('loadingBar');
+  const pct    = document.getElementById('loadingPct');
+  const delays = [600,1100,1700,2300,2900];
+  const pcts   = [20,40,60,80,100];
+
+  steps.forEach((s,i) => {
+    setTimeout(() => {
+      steps.forEach(x => x.classList.remove('active'));
+      s.classList.add('active');
+      s.querySelector('i').className = 'fas fa-spinner fa-spin';
+      bar.style.width = pcts[i] + '%';
+      pct.textContent = pcts[i] + '%';
+    }, delays[i] * 1.0);
+
+    setTimeout(() => {
+      s.classList.remove('active');
+      s.classList.add('done');
+      s.querySelector('i').className = `fas ${icons[i]}`;
+    }, delays[i] * 1.0 + 500);
+  });
+
+  setTimeout(() => {
+    buildItinerary(dest, budget, days, travelers);
+    goToStep(3);
+  }, 3600);
+}
+
+/* ── BUILD ITINERARY ── */
+function buildItinerary(dest, budget, days, travelers) {
+  const moodKey  = tripInfo.mood || 'adventure';
+  const data     = tripData[moodKey] || defaultData;
+  const perDay   = Math.floor(budget / days);
+  const hotelCost    = Math.floor(perDay * 0.40);
+  const foodCost     = Math.floor(perDay * 0.25);
+  const activityCost = Math.floor(perDay * 0.25);
+  const transCost    = Math.floor(perDay * 0.10);
+
+  /* ─ Tags ─ */
+  document.getElementById('itinTitle').innerHTML = `<i class="fas fa-map-marked-alt"></i> ${days}-Day ${capitalise(moodKey)} Trip to ${dest}`;
+  document.getElementById('aiScore').textContent = (8.5 + Math.random() * 1.4).toFixed(1);
+
+  const styleLabels = {solo:'Solo Traveler',couple:'Romantic Couple',family:'Family Group',friends:'Friends Group'};
+  const tagsHtml = [
+    `<span class="itin-tag"><i class="fas fa-calendar"></i> ${days} Days</span>`,
+    `<span class="itin-tag"><i class="fas fa-wallet"></i> ₹${budget.toLocaleString('en-IN')}</span>`,
+    `<span class="itin-tag"><i class="fas fa-users"></i> ${styleLabels[tripInfo.style]||'Travelers'}</span>`,
+    `<span class="itin-tag"><i class="fas fa-heart"></i> ${capitalise(moodKey)}</span>`,
+  ].join('');
+  document.getElementById('itinTags').innerHTML = tagsHtml;
+
+  /* ─ Budget summary ─ */
+  document.getElementById('budgetSummary').innerHTML = `
+    <div class="budget-card"><div class="budget-icon">🏨</div><div class="budget-amount">₹${(hotelCost*days).toLocaleString('en-IN')}</div><div class="budget-label">Accommodation</div></div>
+    <div class="budget-card"><div class="budget-icon">🍽️</div><div class="budget-amount">₹${(foodCost*days).toLocaleString('en-IN')}</div><div class="budget-label">Food & Dining</div></div>
+    <div class="budget-card"><div class="budget-icon">🎯</div><div class="budget-amount">₹${(activityCost*days).toLocaleString('en-IN')}</div><div class="budget-label">Activities</div></div>
+    <div class="budget-card"><div class="budget-icon">🚗</div><div class="budget-amount">₹${(transCost*days).toLocaleString('en-IN')}</div><div class="budget-label">Transport</div></div>
+  `;
+
+  /* ─ Day tabs ─ */
+  const dayThemes = {
+    solo:    ['Arrival & Explore','Hidden Gems','Local Immersion','Adventure Day','Rest & Recharge','Shopping & Culture','Farewell Day'],
+    couple:  ['Romantic Arrival','Sunset Exploration','Spa & Leisure','Adventure Together','Private Dining Day','Beach & Chill','Farewell Sunset'],
+    family:  ['Family Arrival','Theme Park Day','Beach & Water Fun','Cultural Discovery','Nature & Wildlife','Shopping & Food','Fun Farewell'],
+    friends: ['Group Arrival','Party & Beach','Adventure Sports','Local Food Crawl','Day Trip Excursion','Nightlife & Music','Epic Farewell'],
+  };
+  const themes = dayThemes[tripInfo.style] || dayThemes.solo;
+
+  let navHtml = '', panelsHtml = '';
+
+  for (let d = 1; d <= days; d++) {
+    const isActive   = d === 1 ? 'active' : '';
+    const theme      = themes[d - 1] || `Day ${d} — Explore`;
+    const hotel      = data.hotels[(d - 1) % data.hotels.length];
+    const restaurant = data.restaurants[(d - 1) % data.restaurants.length];
+    const morning    = data.morningActs[(d - 1) % data.morningActs.length];
+    const afternoon  = data.afternoonActs[(d - 1) % data.afternoonActs.length];
+    const evening    = data.eveningActs[(d - 1) % data.eveningActs.length];
+
+    navHtml += `<button class="day-btn ${isActive}" onclick="switchDay(${d}, this)">Day ${d}</button>`;
+
+    panelsHtml += `
+      <div class="day-panel ${isActive}" data-day="${d}">
+        <div class="day-card">
+          <div class="day-card-header">
+            <span class="day-badge">Day ${d}</span>
+            <h3>${theme}</h3>
+            <span class="day-cost">₹${perDay.toLocaleString('en-IN')}</span>
+          </div>
+          <div class="day-timeline">
+            <div class="timeline-item">
+              <div class="timeline-left">
+                <div class="timeline-icon morning"><i class="fas fa-sun"></i></div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-time">Morning · 7:00 AM – 12:00 PM</div>
+                <h4>${morning}</h4>
+                <p>Start your day early and make the most of ${dest}'s morning magic. Enjoy local flavors, breathtaking views, and authentic experiences unique to the region.</p>
+                <div class="timeline-meta">
+                  <span class="meta-chip"><i class="fas fa-clock"></i> ~3–4 hrs</span>
+                  <span class="meta-chip"><i class="fas fa-rupee-sign"></i> ₹${Math.floor(activityCost*0.4).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-left">
+                <div class="timeline-icon afternoon"><i class="fas fa-cloud-sun"></i></div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-time">Afternoon · 12:00 PM – 6:00 PM</div>
+                <h4>Lunch at ${restaurant} + ${afternoon}</h4>
+                <p>Refuel with an amazing meal at one of ${dest}'s top-rated spots, then dive into an unforgettable afternoon activity tailored to your travel mood.</p>
+                <div class="timeline-meta">
+                  <span class="meta-chip"><i class="fas fa-clock"></i> ~5–6 hrs</span>
+                  <span class="meta-chip"><i class="fas fa-rupee-sign"></i> ₹${Math.floor(foodCost + activityCost*0.6).toLocaleString('en-IN')}</span>
+                  <span class="meta-chip"><i class="fas fa-star"></i> Highly Rated</span>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-left">
+                <div class="timeline-icon evening"><i class="fas fa-moon"></i></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-time">Evening · 6:00 PM – 10:00 PM</div>
+                <h4>${evening}</h4>
+                <p>End your day perfectly. Let the magic of ${dest} at night create memories that will last a lifetime. Return to ${hotel} for a comfortable night's rest.</p>
+                <div class="timeline-meta">
+                  <span class="meta-chip"><i class="fas fa-hotel"></i> ${hotel}</span>
+                  <span class="meta-chip"><i class="fas fa-rupee-sign"></i> ₹${hotelCost.toLocaleString('en-IN')}/night</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="expense-row">
+            <div class="expense-item"><i class="fas fa-bed"></i> Hotel: ₹${hotelCost.toLocaleString('en-IN')}</div>
+            <div class="expense-item"><i class="fas fa-utensils"></i> Food: ₹${foodCost.toLocaleString('en-IN')}</div>
+            <div class="expense-item"><i class="fas fa-ticket-alt"></i> Activities: ₹${activityCost.toLocaleString('en-IN')}</div>
+            <div class="expense-item"><i class="fas fa-car"></i> Transport: ₹${transCost.toLocaleString('en-IN')}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('dayNav').innerHTML    = navHtml;
+  document.getElementById('dayPanels').innerHTML = panelsHtml;
+
+  /* ─ Tips ─ */
+  const allTips = {
+    adventure: ['Book activities in advance — popular slots fill fast!','Wear sunscreen & carry extra water on hikes','Hire a local guide for the best hidden trails','Travel insurance is a must for adventure sports'],
+    relax:     ['Book spa sessions on arrival to secure your preferred time','Avoid peak hours at popular beaches (9–11 AM)','Most resorts offer complimentary evening activities','Pack light, breathable clothes for humid climates'],
+    culture:   ['Dress modestly when visiting religious sites','Carry a phrase book or translation app','Visit museums on weekday mornings to avoid crowds','Always ask permission before photographing locals'],
+    food:      ['Visit local markets early morning for the freshest produce','Take a food tour on Day 1 to discover the best spots','Avoid tourist-trap restaurants near major landmarks','Try the dish the city is famous for on your first day'],
+    nature:    ['Wildlife is most active at dawn and dusk','Use biodegradable sunscreen to protect natural ecosystems','Hire a licensed naturalist guide for the best experience','Pack rain gear — weather can change quickly outdoors'],
+    luxury:    ['Book fine dining restaurants well in advance','Use the hotel concierge for exclusive access & reservations','Private transfers are worth the cost for comfort','Notify hotels of special occasions for complimentary upgrades'],
+  };
+  const tips = (allTips[moodKey] || allTips.adventure);
+  document.getElementById('tipsCard').innerHTML = `
+    <h3><i class="fas fa-lightbulb"></i> AI Travel Tips for ${dest}</h3>
+    <div class="tips-grid">
+      ${tips.map(t => `<div class="tip-item"><i class="fas fa-check-circle"></i><span>${t}</span></div>`).join('')}
+    </div>`;
+
+  updateStepDots(3);
+}
+
+/* ── DAY SWITCH ── */
+function switchDay(n, btn) {
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelector(`.day-panel[data-day="${n}"]`).classList.add('active');
+}
+
+/* ── NAVIGATION ── */
+function goToStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  updateStepDots(n);
+}
+function updateStepDots(n) {
+  for (let i=1;i<=3;i++){
+    const dot  = document.getElementById('dot'+i);
+    const line = document.getElementById('line'+i);
+    if(!dot) return;
+    dot.classList.remove('active','done');
+    if(i < n) dot.classList.add('done');
+    if(i === n) dot.classList.add('active');
+    if(line) line.classList.toggle('done', i < n);
+  }
+}
+function goBack() { goToStep(1); window.scrollTo({top:0}); }
+
+/* ── ACTIONS ── */
+function printItinerary() { showToast('📄 Preparing your PDF…'); setTimeout(()=>window.print(),800); }
+function shareItinerary() {
+  if(navigator.share){ navigator.share({title:'My Trip Plan - PlanMyTrip AI', url:window.location.href}); }
+  else copyItinerary();
+}
+function copyItinerary() {
+  navigator.clipboard.writeText(window.location.href).then(()=>showToast('🔗 Link copied to clipboard!'));
+}
+
+/* ── TOAST ── */
+let toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3500);
+}
+function capitalise(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):''; }
+</script>
+</body>
+</html>

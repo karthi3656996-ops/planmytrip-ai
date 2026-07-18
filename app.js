@@ -123,15 +123,18 @@ tripForm?.addEventListener('submit', (e) => {
   }
 
   const btn = document.getElementById('generateBtn');
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating…';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening Planner…';
   btn.disabled = true;
 
   setTimeout(() => {
-    btn.innerHTML = '<i class="fas fa-magic"></i> Generate';
+    btn.innerHTML = '<i class="fas fa-magic"></i> Generate My Trip';
     btn.disabled = false;
-    showTripModal(destination, budget, days, style);
-  }, 2200);
+    // Open planner in a new tab with pre-filled data
+    const params = new URLSearchParams({ dest: destination, budget, days, style });
+    window.open(`planner.html?${params.toString()}`, '_blank');
+  }, 800);
 });
+
 
 /* ─── TRIP MODAL ───────────────────────────────────────── */
 function showTripModal(dest, budget, days, style) {
