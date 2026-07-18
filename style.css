@@ -259,8 +259,9 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .hero {
   position: relative; min-height: 100vh;
   display: flex; flex-direction: column; align-items: center;
-  justify-content: center; overflow: hidden;
+  justify-content: center; overflow: visible;
   padding-top: 80px;
+  padding-bottom: 120px;
 }
 .hero-bg {
   position: absolute; inset: 0;
@@ -340,9 +341,9 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 
 /* HERO SEARCH WRAPPER */
 .hero-search-wrapper {
-  position: relative; z-index: 2; width: 100%;
+  position: relative; z-index: 10; width: 100%;
   max-width: 1000px; padding: 0 24px;
-  margin-bottom: -60px;
+  margin-bottom: -80px;
 }
 .search-card {
   background: rgba(255,255,255,0.98); border-radius: var(--radius-lg);
@@ -431,7 +432,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .marquee-strip {
   background: var(--orange);
   padding: 14px 0; overflow: hidden;
-  margin-top: 80px;
+  margin-top: 100px;
+  position: relative; z-index: 5;
 }
 .marquee-track {
   display: flex; gap: 48px; white-space: nowrap;
